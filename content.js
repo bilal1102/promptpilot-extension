@@ -103,18 +103,23 @@ function showPopup(text, inputElement, isLoading = false) {
   const popup = document.createElement("div");
   popup.id = "promptpilot-popup";
 
-  popup.innerHTML = `
-    <div><strong>✨ PromptPilot</strong></div>
-    <textarea id="pp-text" ${isLoading ? "disabled" : ""}></textarea>
+popup.innerHTML = `
+  <div id="pp-header" style="cursor: move; font-weight: bold;">
+    ✨ PromptPilot
+  </div>
 
-    <div id="promptpilot-actions">
-      <button id="replace-btn" ${isLoading ? "disabled" : ""}>Replace</button>
-      <button id="copy-btn" ${isLoading ? "disabled" : ""}>Copy</button>
-      <button id="close-btn">Close</button>
-    </div>
-  `;
+  <textarea id="pp-text" ${isLoading ? "disabled" : ""}></textarea>
+
+  <div id="promptpilot-actions">
+    <button id="replace-btn" ${isLoading ? "disabled" : ""}>Replace</button>
+    <button id="copy-btn" ${isLoading ? "disabled" : ""}>Copy</button>
+    <button id="close-btn">Close</button>
+  </div>
+`;
 
   document.body.appendChild(popup);
+
+  makeDraggable(popup);
 
   const textarea = document.getElementById("pp-text");
   textarea.value = text;
@@ -142,6 +147,38 @@ function showPopup(text, inputElement, isLoading = false) {
   document.getElementById("close-btn").onclick = () => {
     popup.remove();
   };
+}
+
+function makeDraggable(popup) {
+  const header = popup.querySelector("#pp-header");
+
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  header.addEventListener("mousedown", (e) => {
+    isDragging = true;
+
+    offsetX = e.clientX - popup.getBoundingClientRect().left;
+    offsetY = e.clientY - popup.getBoundingClientRect().top;
+
+    document.body.style.userSelect = "none";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    popup.style.left = `${e.clientX - offsetX}px`;
+    popup.style.top = `${e.clientY - offsetY}px`;
+
+    popup.style.right = "auto"; // important
+    popup.style.bottom = "auto";
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+    document.body.style.userSelect = "auto";
+  });
 }
 
 function updatePopup(newText) {
