@@ -74,7 +74,7 @@ button.onclick = async () => {
   showPopup("⏳ Improving your prompt...", input, true);
 
   try {
-    const res = await fetch("http://localhost:5000/improve", {
+    const res = await fetch("https://promptpilot-server-production.up.railway.app/improve", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
