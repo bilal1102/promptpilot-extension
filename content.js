@@ -209,28 +209,47 @@ function showUpgradePopup() {
 
   const popup = document.createElement("div");
   popup.id = "promptpilot-popup";
+  
+  // Explicitly set popup background and text color to prevent inheritance issues
+  popup.style.backgroundColor = "#ffffff";
+  popup.style.color = "#333333";
+  popup.style.padding = "15px";
+  popup.style.borderRadius = "8px";
+  popup.style.border = "1px solid #ccc";
+  popup.style.zIndex = "10000";
+  popup.style.position = "fixed";
 
   popup.innerHTML = `
-    <div id="pp-header"><strong>🚫 Limit Reached</strong></div>
+    <div id="pp-header" style="color: #000; margin-bottom: 10px;"><strong>🚫 Limit Reached</strong></div>
 
-    <div style="margin: 10px 0; font-size: 14px;">
+    <div style="margin: 10px 0; font-size: 14px; color: #333;">
       You've used all free prompts today.<br/>
-      Enter your email to get unlimited access 🚀
+      Enter your email to get unlimited access ₹ 20/day. 🚀
     </div>
 
     <input 
       id="pp-email" 
       type="email" 
       placeholder="Enter your email"
-      style="width: 100%; padding: 8px; margin-bottom: 10px;"
+      style="
+        width: 100%; 
+        padding: 8px; 
+        margin-bottom: 10px; 
+        background-color: #fff !important; 
+        color: #000 !important; 
+        border: 1px solid #999;
+        box-sizing: border-box;
+      "
     />
 
-    <button id="upgrade-btn">Unlock Pro</button>
-    <button id="close-btn">Close</button>
+    <div style="display: flex; gap: 10px;">
+      <button id="upgrade-btn" style="background: #007bff; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">Unlock Pro</button>
+      <button id="close-btn" style="background: #6c757d; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px;">Close</button>
+    </div>
   `;
 
   document.body.appendChild(popup);
-  makeDraggable(popup);
+  if (typeof makeDraggable === "function") makeDraggable(popup);
 
   document.getElementById("upgrade-btn").onclick = sendEmailToBackend;
   document.getElementById("close-btn").onclick = () => popup.remove();
