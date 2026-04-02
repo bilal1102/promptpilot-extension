@@ -3,6 +3,8 @@ const button = document.createElement("div");
 button.id = "promptpilot-btn";
 button.innerText = "✨ Improve";
 const DAILY_LIMIT = 10;
+const LIVE_URL = `https://promptpilot-server-production.up.railway.app`;
+const TEST_URL = `http://localhost:5000`;
 
 document.body.appendChild(button);
 
@@ -43,6 +45,17 @@ function updateUsage() {
   localStorage.setItem("pp_usage", JSON.stringify(usage));
 }
 
+function getUserId() {
+  let userId = localStorage.getItem("pp_user");
+
+  if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem("pp_user", userId);
+  }
+
+  return userId;
+}
+
 // Click handler
 button.onclick = async () => {
   const input = getActiveInput();
@@ -62,24 +75,22 @@ button.onclick = async () => {
   // 🔥 ADD LIMIT CHECK HERE
   const usage = getUsage();
 
-  if (usage.count >= DAILY_LIMIT) {
-    showPopup(
-      "🚫 Free limit reached.\n\nUpgrade to Pro for unlimited prompts 🚀",
-      null
-    );
-    return;
-  }
+ if (usage.count >= DAILY_LIMIT) {
+  showUpgradePopup();
+  return;
+}
 
   // 🔥 STEP 1: show loading popup
   showPopup("⏳ Improving your prompt...", input, true);
 
+const userId = getUserId();
   try {
-    const res = await fetch("https://promptpilot-server-production.up.railway.app/improve", {
+    const res = await fetch(`${LIVE_URL}/improve`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ prompt })
+       body: JSON.stringify({ prompt, userId })
     });
 
     const data = await res.json();
@@ -190,4 +201,62 @@ function updatePopup(newText) {
 
   document.getElementById("replace-btn").disabled = false;
   document.getElementById("copy-btn").disabled = false;
+}
+
+function showUpgradePopup() {
+  const old = document.getElementById("promptpilot-popup");
+  if (old) old.remove();
+
+  const popup = document.createElement("div");
+  popup.id = "promptpilot-popup";
+
+  popup.innerHTML = `
+    <div id="pp-header"><strong>🚫 Limit Reached</strong></div>
+
+    <div style="margin: 10px 0; font-size: 14px;">
+      You've used all free prompts today.<br/>
+      Enter your email to get unlimited access 🚀
+    </div>
+
+    <input 
+      id="pp-email" 
+      type="email" 
+      placeholder="Enter your email"
+      style="width: 100%; padding: 8px; margin-bottom: 10px;"
+    />
+
+    <button id="upgrade-btn">Unlock Pro</button>
+    <button id="close-btn">Close</button>
+  `;
+
+  document.body.appendChild(popup);
+  makeDraggable(popup);
+
+  document.getElementById("upgrade-btn").onclick = sendEmailToBackend;
+  document.getElementById("close-btn").onclick = () => popup.remove();
+}
+
+async function sendEmailToBackend() {
+  const email = document.getElementById("pp-email").value;
+
+  if (!email) {
+    alert("Please enter email");
+    return;
+  }
+
+  const userId = getUserId();
+
+  try {
+    await fetch(`${LIVE_URL}/collect-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, userId })
+    });
+
+    updatePopup("✅ Thanks! We'll notify you about Pro access.");
+  } catch (err) {
+    alert("Error submitting email");
+  }
 }
